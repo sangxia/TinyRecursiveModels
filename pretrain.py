@@ -18,6 +18,7 @@ import hydra
 import pydantic
 from omegaconf import DictConfig
 from adam_atan2 import AdamATan2
+from torch.optim import AdamW
 
 from puzzle_dataset import PuzzleDataset, PuzzleDatasetConfig, PuzzleDatasetMetadata
 from utils.functions import load_model_class, get_model_source_path
@@ -145,9 +146,11 @@ def create_model(config: PretrainConfig, train_metadata: PuzzleDatasetMetadata, 
                     dist.broadcast(param, src=0)
 
     # Optimizers and lr
+    AdamOpt = AdamATan2 if torch.cuda.get_device_capability(0)[0] >= 8 else AdamW
+
     if config.arch.puzzle_emb_ndim == 0:
         optimizers = [
-            AdamATan2(
+            AdamOpt(
                 model.parameters(),
                 lr=0,  # Needs to be set by scheduler
                 weight_decay=config.weight_decay,
@@ -177,7 +180,7 @@ def create_model(config: PretrainConfig, train_metadata: PuzzleDatasetMetadata, 
                 weight_decay=config.puzzle_emb_weight_decay,
                 world_size=world_size
             ),
-            AdamATan2(
+            AdamOpt(
                 model.parameters(),
                 lr=0,  # Needs to be set by scheduler
                 weight_decay=config.weight_decay,
