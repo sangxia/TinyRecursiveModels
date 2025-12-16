@@ -20,3 +20,7 @@ dependencies = [
     "tqdm>=4.67.1",
     "wandb>=0.23.1",
 ]
+
+[tool.uv]
+extra-build-dependencies = { adam_atan2 = [{ requirement = "torch", match-runtime = true }]}
+no-build-isolation-package = ["adam-atan2"]
