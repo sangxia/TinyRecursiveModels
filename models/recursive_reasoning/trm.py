@@ -170,8 +170,9 @@ class TinyRecursiveReasoningModel_ACTV1_Inner(nn.Module):
             pad_count = self.puzzle_emb_len * self.config.hidden_size - puzzle_embedding.shape[-1]
             if pad_count > 0:
                 puzzle_embedding = F.pad(puzzle_embedding, (0, pad_count))
+            puzzle_embedding = puzzle_embedding.view(-1, self.puzzle_emb_len, self.config.hidden_size)
 
-            embedding = torch.cat((puzzle_embedding.view(-1, self.puzzle_emb_len, self.config.hidden_size), embedding), dim=-2)
+            embedding = torch.cat((puzzle_embedding, embedding), dim=-2)
 
         # Position embeddings
         if self.config.pos_encodings == "learned":
