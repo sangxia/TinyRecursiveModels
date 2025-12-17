@@ -107,7 +107,11 @@ class ARC:
     def result(self, save_path: Optional[str], rank: int, world_size: int, group: Optional[torch.distributed.ProcessGroup] = None) -> Optional[Dict[str, float]]:
         # Gather predictions to rank 0 for voting
         global_hmap_preds = [None for _ in range(world_size)] if rank == 0 else None
-        dist.gather_object((self._local_hmap, self._local_preds), global_hmap_preds, dst=0, group=group)
+        if "LOCAL_RANK" in os.environ:
+            dist.gather_object((self._local_hmap, self._local_preds), global_hmap_preds, dst=0, group=group)
+        else:
+            global_hmap_preds = [(self._local_hmap, self._local_preds)]
+
         
         # Rank 0 logic
         if rank != 0:

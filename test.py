@@ -2,6 +2,7 @@ from typing import Optional, Any, Sequence, List
 from dataclasses import dataclass
 import os
 import math
+import time
 import yaml
 import shutil
 import copy
@@ -276,6 +277,7 @@ def evaluate(
 
         carry = None
         processed_batches = 0
+        t0 = time.time()
         
         for set_name, batch, global_batch_size in eval_loader:
             processed_batches += 1
@@ -299,7 +301,7 @@ def evaluate(
                     break
 
             if rank == 0:
-                print(f"  Completed inference in {inference_steps} steps")
+                print(f"  Completed inference in {inference_steps} steps, total time elapsed {time.time() - t0:.3f}s")
 
             for collection in (batch, preds):
                 for k, v in collection.items():
@@ -307,6 +309,7 @@ def evaluate(
                         save_preds.setdefault(k, [])
                         save_preds[k].append(v.cpu())  # Move to CPU for saving GPU memory
 
+            print("  Saved size", sum(u.shape[0] for u in save_preds["preds"]))
             for evaluator in evaluators:
                 evaluator.update_batch(batch, preds)
 
